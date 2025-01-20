@@ -1,13 +1,13 @@
 import sys
-
+import time
 import pygame
 
 FPS = 60
 
 
 class Ball(pygame.sprite.Sprite):
-    def __init__(self, x, y, vx, vy):
-        super().__init__(ball_group)
+    def __init__(self, x, y):
+        super().__init__(all_sprites)
         r = 20
         self.image = pygame.Surface((2 * r, 2 * r), pygame.SRCALPHA, 32)
         pygame.draw.circle(self.image, pygame.Color('red'), (r, r), r)
@@ -38,11 +38,11 @@ class Ball(pygame.sprite.Sprite):
                         dragging = True
                         delta_x = event.pos[0] - x
                         delta_y = event.pos[1] - y
-                if event.type == pygame.MOUSEBUTTONUP:
+                if event.type == pygame.MOUSEBUTTONUP and dragging:
                     dragging = False
                     end_pos = event.pos
-                    self.vx = (end_pos[0] - start_pos[0]) / abs(end_pos[0] - start_pos[0])
-                    self.vy = (end_pos[1] - start_pos[1]) / abs(end_pos[1] - start_pos[1])
+                    self.vx = (end_pos[0] - start_pos[0]) / abs(end_pos[0] - start_pos[0]) * 0.01
+                    self.vy = (end_pos[1] - start_pos[1]) / abs(end_pos[1] - start_pos[1]) * 0.01
                     self.is_moving = True
                 if event.type == pygame.MOUSEMOTION:
                     if dragging:
@@ -50,20 +50,19 @@ class Ball(pygame.sprite.Sprite):
 
 class Coin(pygame.sprite.Sprite):
     def __init__(self, x, y):
-        super().__init__(coins)
+        super().__init__(all_sprites)
+        self.add(coins)
         self.image = pygame.Surface((20, 20), pygame.SRCALPHA, 32)
         pygame.draw.circle(self.image, pygame.Color('yellow'), (10, 10), 10)
         self.rect = pygame.Rect(x, y, 20, 20)
         self.collected = False
 
-    def update(self):
-        if pygame.sprite.spritecollideany(self, ball_group):
-            self.collected = True
+
 
 
 class Border(pygame.sprite.Sprite):
-    def __init__(self, x1, y1, x2, y2, width):
-        super().__init__(borders_sprites)
+    def __init__(self, x1, y1, x2, y2):
+        super().__init__(all_sprites)
         if x1 == x2:
             self.add(vert_borders)
             self.image = pygame.Surface([1, y2 - y1])
@@ -115,6 +114,8 @@ def level_choose():
                 mouse_pos = event.pos
                 if back_rect.collidepoint(mouse_pos):
                     return
+                if lvl1_rect.collidepoint(mouse_pos):
+                    lvl1()
         screen.fill(pygame.Color('black'))
         pygame.draw.rect(screen, pygame.Color("red"), back_rect, border_radius=10)
         pygame.draw.line(screen, pygame.Color("White"), (30, 30), (80, 30))
@@ -125,7 +126,19 @@ def level_choose():
         pygame.display.flip()
         clock.tick(FPS)
 
-
+def lvl1():
+    time.sleep(2)
+    Ball(450, 450)
+    Border(0, 600, 1000, 600)
+    while True:
+        screen.fill(pygame.Color('black'))
+        all_sprites.draw(screen)
+        all_sprites.update()
+        pygame.display.flip()
+        print(1)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
 def terminate():
     pygame.quit()
     sys.exit()
@@ -135,10 +148,9 @@ if __name__ == "__main__":
     pygame.init()
     screen_size = (800, 600)
     screen = pygame.display.set_mode(screen_size)
-    borders_sprites = pygame.sprite.Group()
+    all_sprites = pygame.sprite.Group()
     horiz_borders = pygame.sprite.Group()
     vert_borders = pygame.sprite.Group()
-    ball_group = pygame.sprite.Group()
     coins = pygame.sprite.Group()
     clock = pygame.time.Clock()
     while True:
