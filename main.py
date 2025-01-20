@@ -11,17 +11,42 @@ class Ball(pygame.sprite.Sprite):
         r = 20
         self.image = pygame.Surface((2 * r, 2 * r), pygame.SRCALPHA, 32)
         pygame.draw.circle(self.image, pygame.Color('red'), (r, r), r)
-        self.vx = vx
-        self.vy = vy
+        self.x = x
+        self.y = y
+        self.vx = 0
+        self.vy = 0
         self.rect = pygame.Rect(x, y, r * 2, r * 2)
+        self.is_moving = False
 
     def update(self):
-        self.rect = self.rect.move(self.vx, self.vy)
-        if pygame.sprite.spritecollideany(self, horiz_borders):
-            self.vy = -self.vy
-        if pygame.sprite.spritecollideany(self, vert_borders):
-            self.vx = -self.vx
-
+        if self.is_moving:
+            self.rect = self.rect.move(self.vx, self.vy)
+            if pygame.sprite.spritecollideany(self, horiz_borders):
+                self.vy = -self.vy
+            if pygame.sprite.spritecollideany(self, vert_borders):
+                self.vx = -self.vx
+        else:
+            pygame.draw.line(screen, pygame.Color('red'), (self.x - 20, self.y), (self.x, self.y), 10)
+            pygame.draw.line(screen, pygame.Color('red'), (self.x + 20, self.y), (self.x, self.y), 10)
+            dragging = False
+            delta_x = delta_y = 0
+            start_pos = self.x, self.y
+            for event in pygame.event.get():
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    x, y = mouse_pos = event.pos
+                    if self.rect.collidepoint(mouse_pos):
+                        dragging = True
+                        delta_x = event.pos[0] - x
+                        delta_y = event.pos[1] - y
+                if event.type == pygame.MOUSEBUTTONUP:
+                    dragging = False
+                    end_pos = event.pos
+                    self.vx = (end_pos[0] - start_pos[0]) / abs(end_pos[0] - start_pos[0])
+                    self.vy = (end_pos[1] - start_pos[1]) / abs(end_pos[1] - start_pos[1])
+                    self.is_moving = True
+                if event.type == pygame.MOUSEMOTION:
+                    if dragging:
+                        self.rect = self.rect.move(event.pos[0] - delta_x, event.pose([1]) - delta_y)
 
 class Coin(pygame.sprite.Sprite):
     def __init__(self, x, y):
